@@ -7,3 +7,5 @@ sqlalchemy
 google-generativeai
 python-dotenv
 bcrypt
+numpy
+scikit-learn
