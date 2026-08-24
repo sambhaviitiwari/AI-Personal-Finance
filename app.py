@@ -9,7 +9,7 @@ import random
 from database import SessionLocal, User, Expense, get_password_hash, verify_password, Base, engine
 from ai_categorizer import predict_category
 from ai_anomaly import detect_anomalies
-from ai_forecast import forecast_expenses
+from ai_forecast import get_spending_forecast
 from ai_assistant import ask_assistant, extract_receipt_data
 
 # Ensure tables are created
@@ -135,14 +135,69 @@ def render_dashboard(df):
         st.dataframe(df[df['is_anomaly'] == True][['date', 'description', 'amount', 'category']])
         
     # AI Forecast
-    st.subheader("🔮 AI Spending Forecast")
-    forecast_df = forecast_expenses(df, periods=14)
-    if forecast_df is not None and not forecast_df.empty:
-        fig3 = px.line(forecast_df, x="date", y="predicted_amount", title="Predicted Spending (Next 14 Days)")
-        fig3.update_traces(line_color='green', line_dash='dot')
+st.subheader("🔮 AI Spending Forecast")
+
+forecast_result = get_spending_forecast(
+    df.to_dict("records"),
+    days_ahead=14
+)
+
+if "error" not in forecast_result:
+    forecast_summary = forecast_result["summary"]
+    forecast_df = pd.DataFrame(forecast_summary["daily_forecasts"])
+
+    if not forecast_df.empty:
+        fig3 = px.line(
+            forecast_df,
+            x="date",
+            y="predicted_amount",
+            title="Predicted Spending (Next 14 Days)"
+        )
+        fig3.update_traces(line_dash="dot")
         st.plotly_chart(fig3, use_container_width=True)
+
+        # Forecast metrics
+        forecast_col1, forecast_col2 = st.columns(2)
+
+        forecast_col1.metric(
+            "Projected Spending",
+            f"${forecast_summary['projected_total']:.2f}"
+        )
+
+        forecast_col2.metric(
+            "Forecast Confidence",
+            f"{forecast_summary['confidence_score'] * 100:.0f}%"
+        )
+
+        st.caption(
+            f"Model used: {forecast_summary['model_used']}"
+        )
+
+        # Category Forecast
+        st.subheader("📊 Category-wise Forecast")
+
+        category_forecasts = forecast_result.get("categories", {})
+
+        if category_forecasts:
+            category_df = pd.DataFrame([
+                {
+                    "Category": category,
+                    "Projected Spending": data["projected_total"],
+                    "Daily Average": data["daily_average"],
+                    "Model": data["model_used"]
+                }
+                for category, data in category_forecasts.items()
+            ])
+
+            st.dataframe(
+                category_df,
+                use_container_width=True,
+                hide_index=True
+            )
     else:
-        st.info("Not enough data to generate a forecast. Need at least 10 data points.")
+        st.info("Not enough data to generate a forecast.")
+else:
+    st.info("Not enough transaction data to generate a forecast.")
 
 def render_transactions(db, df):
     st.title("Transactions 💸")
