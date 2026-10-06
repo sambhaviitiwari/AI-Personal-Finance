@@ -1,365 +1,467 @@
-# 💰 AI Personal Finance
+# 💰 FINOVA AI — Personal Finance Management Platform
 
-> An AI-powered personal finance platform that transforms transaction data into actionable financial insights through machine learning, analytics, forecasting, and conversational AI.
-
-<p align="center">
-
-  <a href="https://ai-personal-financee.streamlit.app/">
-    <img src="https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white" alt="Live Demo">
-  </a>
-
-  <img src="https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white" alt="Python">
-
-  <img src="https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit">
-
-  <img src="https://img.shields.io/badge/Scikit--learn-ML-F7931E?logo=scikitlearn&logoColor=white" alt="Scikit-learn">
-
-</p>
+> An AI-powered personal finance platform for intelligent expense tracking, automated categorization, anomaly detection, spending forecasts, financial analytics, and conversational AI assistance.
 
 ---
 
 ## 📌 Overview
 
-Managing personal finances involves more than simply recording transactions.
+**FINOVA AI** is an intelligent personal finance management platform designed to help users manage, analyze, and understand their financial activities.
 
-Traditional expense trackers can show users **where their money went**, but they often provide limited insight into:
+Traditional expense trackers primarily focus on recording transactions. FINOVA AI extends this functionality by integrating **Machine Learning, Data Analytics, Forecasting, Anomaly Detection, and Generative AI**.
 
-- spending behaviour
-- unusual transactions
-- category-wise spending
-- changing financial patterns
-- future expenditure
-- personalized financial insights
-
-**AI Personal Finance** combines expense management, data analytics, machine learning, forecasting, and generative AI into a single financial intelligence application.
-
-The current implementation is a **Python + Streamlit application** backed by a **SQLite database through SQLAlchemy**, with dedicated modules for expense categorization, anomaly detection, spending forecasting, financial analysis, and AI-assisted insights.
+The platform allows users to track financial transactions, analyze spending patterns, automatically categorize expenses, detect unusual transactions, forecast future spending, and interact with their financial data through an AI-powered assistant.
 
 ---
 
-## 🎯 Problem Statement
+## ✨ Features
 
-Personal financial data is often spread across different sources such as:
+### 💳 Expense Management
 
-- Bank transactions
-- UPI payments
-- Payment applications
-- Debit and credit card transactions
-- Receipts
-- Manual expense records
+* Add and manage financial transactions
+* Record income and expenses
+* Store transaction amount, category, date, and description
+* Maintain transaction history
+* Organize financial records using a structured database
 
-Simply storing this information does not provide enough context.
+### 📊 Financial Analytics
 
-Users need a system that can help answer questions such as:
+The application provides insights into financial activity, including:
 
-> **Where am I spending the most?**
+* Total spending
+* Category-wise spending
+* Income and expense tracking
+* Spending trends
+* Historical transaction analysis
+* Interactive data visualization
 
-> **Is this transaction unusual?**
+### 🏷️ AI-Based Expense Categorization
 
-> **How is my spending changing over time?**
+The system includes an AI-powered categorization module that helps classify transactions into appropriate spending categories.
 
-> **What might my future spending look like?**
+Examples include:
 
-> **What does my financial data actually tell me?**
+* Food
+* Travel
+* Shopping
+* Entertainment
+* Bills
+* Healthcare
+* Other financial categories
 
-This project explores how machine learning and generative AI can be integrated into a personal finance workflow to answer those questions.
+This reduces the need for completely manual categorization.
 
----
+### 🚨 Anomaly Detection
 
-# ✨ Key Features
+FINOVA AI includes an anomaly detection module that analyzes transaction patterns and identifies unusual spending behavior.
 
-## 💳 Expense & Transaction Management
-
-The application provides a structured interface for managing financial transactions.
-
-Users can:
-
-- Add transactions
-- Store transaction amount, date, category and description
-- View transaction history
-- Filter financial records
-- Delete transactions
-- Export transaction data as CSV
-- Analyse stored transaction data
-
----
-
-## 🧠 Automated Expense Categorization
-
-The application uses a lightweight NLP classification pipeline to automatically categorize transaction descriptions.
-
-### Pipeline
+For example:
 
 ```text
-Transaction Description
-          │
-          ▼
-    TF-IDF Vectorization
-          │
-          ▼
- Logistic Regression
-          │
-          ▼
-   Predicted Category
+Normal Food Spending
+       ↓
+₹200 – ₹500
+       ↓
+Unexpected Transaction
+       ↓
+₹4,500
+       ↓
+⚠️ Potential Anomaly
 ```
 
----
+The anomaly detection system helps users identify transactions that significantly deviate from their regular spending patterns.
 
-## 🚨 Anomaly Detection
+### 🔮 Spending Forecasting
 
-Uses Isolation Forest to flag transactions that deviate from normal spending.
+The forecasting module analyzes historical transaction data to estimate future spending.
 
-- Validates input: missing columns, non-numeric or missing values, empty data, insufficient history
-- Configurable contamination parameter
-- Fixed random state for reproducibility
-- Results stored per transaction as `is_anomaly`
+It can be used to understand:
 
----
+* Expected future expenditure
+* Overall spending trends
+* Category-wise spending forecasts
+* Potential changes in spending behavior
 
-## 📊 Financial Analytics
+### 💬 AI Financial Assistant
 
-- Total spending, transaction count, average transaction, largest expense
-- Category-wise totals, counts, and averages
-- Monthly spending and month-over-month change
-- Anomaly summary
+FINOVA AI includes a conversational AI assistant that allows users to ask questions about their financial data using natural language.
 
----
+Example questions:
 
-## 🔮 Spending Forecasting
+> How much did I spend on food?
 
-The forecasting module adapts to how much history is available.
+> What are my highest expenses?
 
-| Data available | Approach |
-|---|---|
-| Sparse | Moving average: overall average combined with the recent 7-day average |
-| Sufficient | Random Forest Regressor on time and lag features |
+> Which category has the most spending?
 
-### Features for the ML model
+> Analyze my spending pattern.
 
-- Day of week
-- Day of month
-- Month
-- Weekend flag
-- Previous-day spend
-- Previous-week spend
-- Rolling 7-day average
+The AI assistant processes financial information and generates responses based on the available transaction data.
 
----
+### 🔐 Backend API
 
-## 🤖 AI Financial Assistant
+The project includes a **FastAPI backend** for managing application data and API communication.
 
-Deterministic analytics are computed first, then passed as structured context to Google Gemini, so answers are grounded in your actual data.
+The backend provides:
 
-### Example Questions
-
-- "How much did I spend this month?"
-- "What is my largest expense?"
-- "Which category am I spending the most on?"
-- "How has my spending changed?"
-- "Show me unusual transactions."
+* API endpoints
+* Database connectivity
+* User management
+* Transaction management
+* Budget-related data handling
+* AI chat storage
+* Forecast and anomaly-related data models
+* Health monitoring endpoint
 
 ---
 
-## 🏗️ Architecture
+# 🏗️ System Architecture
 
 ```text
                     ┌─────────────────────┐
-                    │    Streamlit UI     │
-                    │       app.py        │
+                    │     User Interface  │
+                    │      Streamlit      │
                     └──────────┬──────────┘
                                │
-          ┌────────────────────┼────────────────────┐
-          ▼                    ▼                    ▼
- ┌────────────────┐   ┌────────────────┐   ┌────────────────┐
- │  Transaction   │   │   Financial    │   │   AI / ML      │
- │  Management    │   │   Analytics    │   │   Modules      │
- └───────┬────────┘   └────────────────┘   └───────┬────────┘
-         ▼                                         │
- ┌────────────────┐        Categorizer · Anomaly Detection
- │ SQLAlchemy +   │        Forecasting · AI Assistant (Gemini)
- │ SQLite         │
- └────────────────┘
+                               ▼
+                    ┌─────────────────────┐
+                    │    Application      │
+                    │      Logic          │
+                    └──────────┬──────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              ▼                ▼                ▼
+       ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+       │ Transaction │  │  Analytics  │  │ AI Modules  │
+       │ Management  │  │ & Dashboard │  │             │
+       └──────┬──────┘  └─────────────┘  └──────┬──────┘
+              │                                  │
+              ▼                                  ▼
+       ┌─────────────┐                  ┌──────────────────┐
+       │   SQLite    │                  │ Categorization   │
+       │  Database   │                  ├──────────────────┤
+       └─────────────┘                  │ Anomaly Detection│
+                                        ├──────────────────┤
+                                        │ Spending Forecast│
+                                        ├──────────────────┤
+                                        │ AI Assistant     │
+                                        └──────────────────┘
 ```
 
 ---
 
-## 📁 Project Structure
+# 🛠️ Technology Stack
+
+| Component                 | Technology         |
+| ------------------------- | ------------------ |
+| Programming Language      | Python             |
+| Frontend / UI             | Streamlit          |
+| Backend API               | FastAPI            |
+| Database                  | SQLite             |
+| ORM                       | SQLAlchemy         |
+| Data Processing           | Pandas             |
+| Machine Learning          | Scikit-learn       |
+| Forecasting               | Prophet            |
+| AI / Generative AI        | Google Gemini API  |
+| Data Visualization        | Plotly             |
+| Authentication / Security | Bcrypt             |
+| API Testing               | FastAPI Swagger UI |
+
+---
+
+# 📂 Project Structure
 
 ```text
 AI-Personal-Finance/
-├── app.py              # Streamlit UI
-├── database.py         # SQLAlchemy models, DB config, auth utilities
-├── ai_categorizer.py   # TF-IDF + Logistic Regression categorization
-├── ai_anomaly.py       # Isolation Forest anomaly detection
-├── ai_forecast.py      # Moving-average and Random Forest forecasting
-├── ai_assistant.py     # Financial analytics + Gemini-assisted insights
+│
+├── app.py
+│   └── Main Streamlit application
+│
+├── database.py
+│   └── Database configuration and operations
+│
+├── ai_categorizer.py
+│   └── AI-based expense categorization
+│
+├── ai_anomaly.py
+│   └── Transaction anomaly detection
+│
+├── ai_forecast.py
+│   └── Spending prediction and forecasting
+│
+├── ai_assistant.py
+│   └── AI-powered financial assistant
+│
+├── backend/
+│   ├── main.py
+│   │   └── FastAPI application
+│   │
+│   ├── models.py
+│   │   └── Database models
+│   │
+│   ├── database.py
+│   │   └── Backend database configuration
+│   │
+│   └── ...
+│
 ├── requirements.txt
+│   └── Project dependencies
+│
+├── .env
+│   └── Environment variables and API keys
+│
 ├── .gitignore
+│   └── Files excluded from version control
+│
 └── README.md
+    └── Project documentation
 ```
 
 ---
 
-## 🗄️ Data Model
+# ⚙️ Installation and Setup
 
-```text
-User                         Expense
-├── id                       ├── id
-├── username                 ├── amount
-└── password_hash            ├── date
-                             ├── category
-                             ├── description
-                             ├── is_anomaly
-                             └── user_id  → User.id
-```
-
----
-
-## 🛠️ Tech Stack
-
-| Category | Technology |
-|---|---|
-| Language | Python |
-| UI | Streamlit |
-| Data processing | Pandas, NumPy |
-| Machine learning | Scikit-learn |
-| NLP / Classification | TF-IDF, Logistic Regression |
-| Anomaly detection | Isolation Forest |
-| Forecasting | Random Forest, Moving Average |
-| Database / ORM | SQLite, SQLAlchemy |
-| Visualization | Plotly |
-| Generative AI | Google Gemini |
-| Auth | bcrypt |
-| Config | python-dotenv |
-| Deployment | Streamlit Community Cloud |
-
----
-
-## ⚙️ Installation & Setup
-
-**Prerequisites:** Python 3.9+, pip, Git
-
-### 1. Clone
+## 1. Clone the Repository
 
 ```bash
 git clone https://github.com/sambhaviitiwari/AI-Personal-Finance.git
 cd AI-Personal-Finance
 ```
 
-### 2. Create a virtual environment
-
-**Windows:**
+## 2. Create a Virtual Environment
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
+python -m venv venv
 ```
 
-**macOS / Linux:**
+### Windows
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+venv\Scripts\activate
 ```
 
-### 3. Install dependencies
+### macOS / Linux
+
+```bash
+source venv/bin/activate
+```
+
+## 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure environment variables
+---
 
-Create a `.env` file in the project root:
+# 🔑 Environment Variables
+
+Create a `.env` file in the project directory.
 
 ```env
-GOOGLE_API_KEY=your_api_key_here
+GOOGLE_API_KEY=your_google_api_key
 ```
 
-### 5. Run the app
+The Google API key is used by the AI Financial Assistant.
+
+> Never upload your `.env` file or API keys to a public repository.
+
+---
+
+# 🚀 Running the Streamlit Application
+
+Run:
 
 ```bash
 streamlit run app.py
 ```
 
-Open:
+The application will start locally and can be accessed through the URL displayed in the terminal.
+
+---
+
+# 🌐 Live Application
+
+The Streamlit application is deployed and accessible here:
+
+**[FINOVA AI – Live Demo](https://ai-personal-financee.streamlit.app/?utm_source=chatgpt.com)**
+
+---
+
+# ⚡ Running the FastAPI Backend
+
+Navigate to the project directory and activate the virtual environment.
+
+Then run:
+
+```bash
+uvicorn backend.main:app --reload
+```
+
+The backend will run locally at:
 
 ```text
-http://localhost:8501
+http://127.0.0.1:8000
 ```
 
 ---
 
-## 🔐 Security & Privacy
+# 📚 API Documentation
 
-- Passwords are hashed with bcrypt
-- Expenses are tied to individual users
-- Input validation on analytics and ML modules
-- API credentials loaded from environment variables
+FastAPI automatically provides interactive API documentation.
 
-Never commit `.env`, `*.db`, `*.sqlite`, `*.sqlite3`, API keys, or real financial data.
+After starting the backend, open:
 
----
+```text
+http://127.0.0.1:8000/docs
+```
 
-## 🧪 Project Status
+This provides the Swagger UI interface where API endpoints can be tested directly.
 
-### Implemented
-
-- Streamlit app with user accounts
-- Transaction management and CSV export
-- SQLite + SQLAlchemy data layer
-- TF-IDF + Logistic Regression categorization
-- Isolation Forest anomaly detection
-- Spending analytics (monthly, category, change over time)
-- Adaptive forecasting (moving average + Random Forest)
-- Gemini-assisted financial insights
-- Streamlit deployment
-
-### Planned
-
-- Automated unit and integration tests
-- Model evaluation: cross-validation, precision / recall / F1, forecast backtesting
-- Larger real-world training data for categorization
-- Budgets and financial goals
-- Receipt / OCR transaction extraction
-- REST API layer and PostgreSQL
-- Production-grade authentication and role-based access
-- CI/CD pipeline
-
-These are future improvements, not current functionality.
+The backend also includes a health endpoint to verify that the API and database connection are working correctly.
 
 ---
 
-## 🧠 What We Learned
+# 🧠 AI Modules
 
-- Structuring a Python app into UI, data, ML, and AI modules
-- TF-IDF text classification and unsupervised anomaly detection
-- Feature engineering for time-series forecasting, including graceful handling of sparse data
-- Relational modelling with SQLAlchemy
-- Combining deterministic analytics with generative AI for grounded responses
+## 1. Expense Categorization
 
----
+The categorization module analyzes transaction information and assigns an appropriate expense category.
 
-## 🎓 Academic Project
-
-Developed as a collaborative academic project exploring the integration of machine learning, data analytics, generative AI, and software engineering in a financial application.
-
----
-
-## 👥 Team
-
-- Nainsy Sharma
-- Sambhavi Tiwari
-- Jayita Saikia
-- Animesh Pandey
-- Piyush Yadav
-- Pranshu Dubey
-- Shivam Sinha
+```text
+Transaction Description
+        ↓
+Data Processing
+        ↓
+Machine Learning / Classification
+        ↓
+Expense Category
+```
 
 ---
 
-## 📜 License
+## 2. Anomaly Detection
 
-This project is developed for academic and educational purposes.
+The anomaly detection module identifies transactions that significantly differ from normal spending behavior.
 
-Developed for academic and educational purposes. A formal open-source license may be added later.
+```text
+Historical Transactions
+        ↓
+Spending Pattern Analysis
+        ↓
+Anomaly Detection
+        ↓
+Unusual Transaction Alert
+```
+
+---
+
+## 3. Spending Forecasting
+
+The forecasting system uses historical spending information to estimate future financial trends.
+
+```text
+Historical Spending Data
+        ↓
+Data Processing
+        ↓
+Forecasting Model
+        ↓
+Predicted Future Spending
+```
+
+---
+
+## 4. AI Financial Assistant
+
+The AI assistant enables users to interact with financial information using natural language.
+
+```text
+User Question
+      ↓
+Financial Context
+      ↓
+AI Processing
+      ↓
+Generated Financial Insight
+```
+
+---
+
+# 🗄️ Database
+
+The application uses **SQLite** for storing financial data.
+
+The database is used to manage entities such as:
+
+* Users
+* Transactions
+* Budgets
+* Forecasts
+* Anomalies
+* AI chat history
+
+SQLAlchemy is used as the ORM for database interaction in the backend.
+
+---
+
+# 👥 Team Members
+
+* **Nainsy Sharma**
+* **Sambhavi Tiwari**
+* **Jayita Saikia**
+* **Animesh Pandey**
+* **Piyush Yadav**
+* **Pranshu Dubey**
+* **Shivam Sinha**
+
+---
+
+# 🎯 Project Objective
+
+The primary objective of FINOVA AI is to move beyond traditional expense tracking and provide users with intelligent financial insights.
+
+The system combines:
+
+* Expense tracking
+* Data analytics
+* Machine learning
+* Anomaly detection
+* Spending prediction
+* Generative AI
+* Backend API integration
+
+This creates a foundation for a smarter and more interactive personal finance management experience.
+
+---
+
+# 🔮 Future Scope
+
+Possible future enhancements include:
+
+* Advanced authentication and authorization
+* Cloud database integration
+* Improved ML models
+* More advanced financial recommendations
+* Receipt scanning and OCR
+* Mobile application
+* Notifications and financial alerts
+* Advanced budget recommendation system
+
+---
+
+# 📄 License
+
+This project is developed for educational and academic purposes.
+
+---
+
+# ⭐ Support
+
+If you find this project useful, consider giving the repository a star ⭐.
+
+---
+
+## 💰 FINOVA AI
+
+**Track smarter. Analyze deeper. Manage finances intelligently.**
