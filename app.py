@@ -52,6 +52,16 @@ if "user_id" not in st.session_state:
 if "username" not in st.session_state:
     st.session_state["username"] = None
 
+# ---------------------------------------------------------
+# NAINSY'S CONTRIBUTION: monthly budget tracking state
+# Kept in session_state (not the DB) so this doesn't require
+# any schema change to database.py - it's a self-contained
+# addition scoped entirely to app.py.
+# ---------------------------------------------------------
+
+if "monthly_budget" not in st.session_state:
+    st.session_state["monthly_budget"] = 0.0
+
 
 # ---------------------------------------------------------
 # DATABASE HELPER
@@ -336,6 +346,76 @@ def render_dashboard(df):
     st.markdown("---")
 
     # =====================================================
+    # NAINSY'S CONTRIBUTION: MONTHLY BUDGET TRACKER
+    # =====================================================
+    # Lets the user set a monthly budget and see, at a glance,
+    # how this calendar month's spending compares to it - with
+    # a progress bar and an over-budget warning. Budget amount
+    # lives in st.session_state (see top of file), so it doesn't
+    # require any change to database.py's schema.
+
+    st.subheader(
+        "💰 Monthly Budget"
+    )
+
+    budget_col1, budget_col2 = st.columns([2, 1])
+
+    with budget_col2:
+        new_budget = st.number_input(
+            "Set monthly budget (₹)",
+            min_value=0.0,
+            value=float(st.session_state["monthly_budget"]),
+            step=500.0,
+            format="%.2f",
+            key="monthly_budget_input"
+        )
+        if new_budget != st.session_state["monthly_budget"]:
+            st.session_state["monthly_budget"] = new_budget
+
+    budget = st.session_state["monthly_budget"]
+
+    with budget_col1:
+        if budget <= 0:
+            st.info(
+                "Set a monthly budget on the right to track "
+                "your spending against it."
+            )
+        else:
+            df_dates = pd.to_datetime(df["date"], errors="coerce")
+            now = datetime.now()
+            this_month_mask = (
+                (df_dates.dt.month == now.month)
+                & (df_dates.dt.year == now.year)
+            )
+            month_spend = df.loc[this_month_mask, "amount"].sum()
+
+            pct_used = min(1.0, month_spend / budget) if budget > 0 else 0.0
+            remaining = budget - month_spend
+
+            st.progress(
+                pct_used,
+                text=f"₹{month_spend:,.2f} of ₹{budget:,.2f} spent this month"
+            )
+
+            if remaining < 0:
+                st.error(
+                    f"You're ₹{abs(remaining):,.2f} over your "
+                    f"monthly budget."
+                )
+            elif pct_used >= 0.9:
+                st.warning(
+                    f"Only ₹{remaining:,.2f} left in your budget "
+                    f"for the rest of the month."
+                )
+            else:
+                st.success(
+                    f"₹{remaining:,.2f} remaining in your "
+                    f"budget this month."
+                )
+
+    st.markdown("---")
+
+    # =====================================================
     # SPENDING TREND
     # =====================================================
 
@@ -613,6 +693,52 @@ def render_transactions(db, df):
             key="expense_date"
         )
 
+        # -------------------------------------------------
+        # NAINSY'S CONTRIBUTION: manual category override.
+        # The AI categorizer is trained on a small dummy
+        # dataset, so it can mispredict on descriptions it
+        # hasn't seen. We still run it (and show what it
+        # suggested), but let the user confirm or correct it
+        # before saving - better UX and better training signal
+        # than silently trusting an ML model with ~20 examples.
+        #
+        # Note: because this selectbox has a `key`, Streamlit
+        # ignores the `index=` argument on reruns once the
+        # widget already has state - so we push the AI's
+        # suggestion into st.session_state directly, and only
+        # when the description actually changed (so we don't
+        # clobber a manual choice on every keystroke elsewhere
+        # on the page).
+        # -------------------------------------------------
+
+        KNOWN_CATEGORIES = [
+            "Food", "Transport", "Shopping", "Entertainment",
+            "Utilities", "Housing", "Health", "Travel", "Other"
+        ]
+
+        suggested_cat = None
+        if desc.strip():
+            try:
+                suggested_cat = predict_category(desc)
+            except Exception:
+                suggested_cat = None
+
+        if (
+            suggested_cat in KNOWN_CATEGORIES
+            and st.session_state.get("_last_categorized_desc") != desc
+        ):
+            st.session_state["_last_categorized_desc"] = desc
+            st.session_state["expense_category_override"] = suggested_cat
+
+        if suggested_cat:
+            st.caption(f"🤖 AI suggests: **{suggested_cat}** — change it below if it's wrong.")
+
+        chosen_cat = st.selectbox(
+            "Category",
+            KNOWN_CATEGORIES,
+            key="expense_category_override"
+        )
+
         if st.button(
             "Save Expense",
             key="save_expense"
@@ -626,10 +752,8 @@ def render_transactions(db, df):
 
             else:
 
-                # AI auto categorization
-                cat = predict_category(
-                    desc
-                )
+                # Use the AI suggestion unless the user changed it
+                cat = chosen_cat if chosen_cat else predict_category(desc)
 
                 new_exp = Expense(
                     amount=amt,
@@ -646,7 +770,7 @@ def render_transactions(db, df):
 
                 st.success(
                     f"Added successfully! "
-                    f"AI categorized it as: **{cat}**"
+                    f"Category: **{cat}**"
                 )
 
                 st.rerun()
@@ -742,6 +866,33 @@ def render_transactions(db, df):
 
     else:
 
+        # -------------------------------------------------
+        # NAINSY'S CONTRIBUTION: filters + CSV export + delete
+        # -------------------------------------------------
+
+        filter_col1, filter_col2 = st.columns(2)
+
+        with filter_col1:
+            available_categories = sorted(df["category"].dropna().unique().tolist())
+            selected_categories = st.multiselect(
+                "Filter by category",
+                options=available_categories,
+                default=available_categories,
+                key="txn_category_filter"
+            )
+
+        with filter_col2:
+            df_dates_all = pd.to_datetime(df["date"], errors="coerce")
+            min_date = df_dates_all.min().date()
+            max_date = df_dates_all.max().date()
+            date_range = st.date_input(
+                "Filter by date range",
+                value=(min_date, max_date),
+                min_value=min_date,
+                max_value=max_date,
+                key="txn_date_filter"
+            )
+
         display_df = (
             df.sort_values(
                 by="date",
@@ -750,11 +901,63 @@ def render_transactions(db, df):
             .copy()
         )
 
+        if selected_categories:
+            display_df = display_df[
+                display_df["category"].isin(selected_categories)
+            ]
+
+        if isinstance(date_range, tuple) and len(date_range) == 2:
+            start_date, end_date = date_range
+            display_dates = pd.to_datetime(display_df["date"], errors="coerce")
+            display_df = display_df[
+                (display_dates.dt.date >= start_date)
+                & (display_dates.dt.date <= end_date)
+            ]
+
         st.dataframe(
             display_df,
             use_container_width=True,
             hide_index=True
         )
+
+        st.download_button(
+            "⬇️ Download filtered transactions as CSV",
+            data=display_df.to_csv(index=False).encode("utf-8"),
+            file_name="transactions.csv",
+            mime="text/csv",
+            key="download_transactions_csv"
+        )
+
+        with st.expander("🗑️ Delete a transaction"):
+            if display_df.empty:
+                st.caption("No transactions match the current filters.")
+            else:
+                options = {
+                    f"#{row.id} · {row.date} · {row.description} · ₹{row.amount:,.2f}": row.id
+                    for row in display_df.itertuples()
+                }
+                to_delete_label = st.selectbox(
+                    "Select a transaction to delete",
+                    list(options.keys()),
+                    key="delete_txn_select"
+                )
+                if st.button("Delete selected transaction", key="delete_txn_button"):
+                    txn_id = options[to_delete_label]
+                    record = (
+                        db.query(Expense)
+                        .filter(
+                            Expense.id == txn_id,
+                            Expense.user_id == st.session_state["user_id"]
+                        )
+                        .first()
+                    )
+                    if record:
+                        db.delete(record)
+                        db.commit()
+                        st.success("Transaction deleted.")
+                        st.rerun()
+                    else:
+                        st.error("Couldn't find that transaction.")
 
 
 # =========================================================
