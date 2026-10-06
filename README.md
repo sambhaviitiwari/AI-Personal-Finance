@@ -295,7 +295,7 @@ Navigate to the project directory and activate the virtual environment.
 Then run:
 
 ```bash
-uvicorn backend.main:app --reload
+python -m uvicorn backend.main:app --reload
 ```
 
 The backend will run locally at:
